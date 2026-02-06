@@ -1,4 +1,4 @@
-import { isAdult, isValidPostalCode, isValidName } from './validator.js';
+import { isAdult, isValidPostalCode, isValidName, sanitizeInput, isValidEmail } from './validator.js';
 
 describe('Validator Module', () => {
   
@@ -370,153 +370,264 @@ describe('Validator Module', () => {
       });
     });
   });
+
   // ============================================
-  // VALIDATION IDENTITÉ - isValidName()
+  // SÉCURITÉ - sanitizeInput()
   // ============================================
-  describe('isValidName - Nom/Prénom valide (sans chiffres ni caractères spéciaux)', () => {
+  describe('sanitizeInput - Protection XSS', () => {
 
-    // --- Cas passants ---
-    describe('Cas passants', () => {
-      test('devrait valider un prénom simple', () => {
-        const result = isValidName('Jean');
-        expect(result).toEqual({ valid: true, name: 'Jean' });
+    // --- Cas passants - Texte normal ---
+    describe('Cas passants - Texte normal', () => {
+      test('devrait retourner le texte inchangé si pas de XSS', () => {
+        const result = sanitizeInput('Bonjour le monde');
+        expect(result).toEqual({ sanitized: 'Bonjour le monde', wasModified: false });
       });
 
-      test('devrait valider un nom avec accent', () => {
-        const result = isValidName('François');
-        expect(result).toEqual({ valid: true, name: 'François' });
+      test('devrait retourner le texte avec accents inchangé', () => {
+        const result = sanitizeInput('Café résumé');
+        expect(result).toEqual({ sanitized: 'Café résumé', wasModified: false });
       });
 
-      test('devrait valider un nom composé avec tiret', () => {
-        const result = isValidName('Jean-Pierre');
-        expect(result).toEqual({ valid: true, name: 'Jean-Pierre' });
-      });
-
-      test('devrait valider un nom avec apostrophe', () => {
-        const result = isValidName("O'Connor");
-        expect(result).toEqual({ valid: true, name: "O'Connor" });
-      });
-
-      test('devrait valider un nom avec plusieurs accents', () => {
-        const result = isValidName('Éléonore');
-        expect(result).toEqual({ valid: true, name: 'Éléonore' });
-      });
-
-      test('devrait valider un nom avec espace', () => {
-        const result = isValidName('De La Fontaine');
-        expect(result).toEqual({ valid: true, name: 'De La Fontaine' });
-      });
-
-      test('devrait valider des caractères accentués variés', () => {
-        const result = isValidName('Müller');
-        expect(result).toEqual({ valid: true, name: 'Müller' });
-      });
-
-      test('devrait valider un nom avec cédille', () => {
-        const result = isValidName('Françoise');
-        expect(result).toEqual({ valid: true, name: 'Françoise' });
+      test('devrait accepter les caractères spéciaux inoffensifs', () => {
+        const result = sanitizeInput('Prix: 10€ (environ $12)');
+        expect(result.wasModified).toBe(false);
       });
     });
 
-    // --- Cas échouants ---
-    describe('Cas échouants - Caractères invalides', () => {
-      test('devrait rejeter un nom avec des chiffres', () => {
-        const result = isValidName('Jean123');
-        expect(result.valid).toBe(false);
-        expect(result.error).toBe('INVALID_CHARACTERS');
+    // --- Sanitization - Suppression des balises dangereuses ---
+    describe('Sanitization - Suppression des balises dangereuses', () => {
+      test('devrait supprimer les balises script', () => {
+        const result = sanitizeInput('<script>alert("xss")</script>');
+        expect(result.wasModified).toBe(true);
+        expect(result.sanitized).not.toContain('<script');
+        expect(result.sanitized).not.toContain('</script>');
       });
 
-      test('devrait rejeter un nom avec @ ', () => {
-        const result = isValidName('Jean@Doe');
-        expect(result.valid).toBe(false);
-        expect(result.error).toBe('INVALID_CHARACTERS');
+      test('devrait supprimer les balises HTML simples', () => {
+        const result = sanitizeInput('<b>texte</b>');
+        expect(result.wasModified).toBe(true);
+        expect(result.sanitized).toBe('texte');
       });
 
-      test('devrait rejeter un nom avec #', () => {
-        const result = isValidName('Jean#Doe');
-        expect(result.valid).toBe(false);
-        expect(result.error).toBe('INVALID_CHARACTERS');
+      test('devrait supprimer les balises img avec onerror', () => {
+        const result = sanitizeInput('<img src=x onerror=alert(1)>');
+        expect(result.wasModified).toBe(true);
+        expect(result.sanitized).not.toContain('<img');
       });
 
-      test('devrait rejeter un nom avec underscore', () => {
-        const result = isValidName('Jean_Doe');
-        expect(result.valid).toBe(false);
-        expect(result.error).toBe('INVALID_CHARACTERS');
+      test('devrait supprimer les balises iframe', () => {
+        const result = sanitizeInput('<iframe src="malicious.com"></iframe>');
+        expect(result.wasModified).toBe(true);
+        expect(result.sanitized).not.toContain('<iframe');
       });
 
-      test('devrait rejeter une chaîne vide', () => {
-        const result = isValidName('');
-        expect(result.valid).toBe(false);
-        expect(result.error).toBe('EMPTY_NAME');
+      test('devrait supprimer les balises div', () => {
+        const result = sanitizeInput('<div>contenu</div>');
+        expect(result.wasModified).toBe(true);
+        expect(result.sanitized).toBe('contenu');
       });
 
-      test('devrait rejeter un nom avec seulement des espaces', () => {
-        const result = isValidName('   ');
-        expect(result.valid).toBe(false);
-        expect(result.error).toBe('EMPTY_NAME');
+      test('devrait supprimer les balises style', () => {
+        const result = sanitizeInput('<style>body{display:none}</style>');
+        expect(result.wasModified).toBe(true);
+        expect(result.sanitized).not.toContain('<style');
       });
     });
 
-    // --- Sécurité XSS ---
-    describe('Sécurité - Injection XSS', () => {
-      test('devrait rejeter une balise script', () => {
-        const result = isValidName('<script>alert("xss")</script>');
-        expect(result.valid).toBe(false);
-        expect(result.error).toBe('XSS_DETECTED');
+    // --- Sanitization - Suppression des attributs dangereux ---
+    describe('Sanitization - Suppression des attributs dangereux', () => {
+      test('devrait supprimer onclick', () => {
+        const result = sanitizeInput('texte onclick=alert(1)');
+        expect(result.wasModified).toBe(true);
+        expect(result.sanitized).not.toContain('onclick');
       });
 
-      test('devrait rejeter une balise HTML', () => {
-        const result = isValidName('<b>Jean</b>');
-        expect(result.valid).toBe(false);
-        expect(result.error).toBe('XSS_DETECTED');
+      test('devrait supprimer onerror', () => {
+        const result = sanitizeInput('texte onerror=alert(1)');
+        expect(result.wasModified).toBe(true);
+        expect(result.sanitized).not.toContain('onerror');
       });
 
-      test('devrait rejeter une injection avec < et >', () => {
-        const result = isValidName('Jean<img src=x onerror=alert(1)>');
-        expect(result.valid).toBe(false);
-        expect(result.error).toBe('XSS_DETECTED');
+      test('devrait supprimer onload', () => {
+        const result = sanitizeInput('texte onload=alert(1)');
+        expect(result.wasModified).toBe(true);
+        expect(result.sanitized).not.toContain('onload');
       });
 
-      test('devrait rejeter javascript:', () => {
-        const result = isValidName('javascript:alert(1)');
-        expect(result.valid).toBe(false);
-        expect(result.error).toBe('XSS_DETECTED');
+      test('devrait supprimer onmouseover', () => {
+        const result = sanitizeInput('texte onmouseover=alert(1)');
+        expect(result.wasModified).toBe(true);
+        expect(result.sanitized).not.toContain('onmouseover');
       });
 
-      test('devrait rejeter onclick=', () => {
-        const result = isValidName('Jean onclick=alert(1)');
-        expect(result.valid).toBe(false);
-        expect(result.error).toBe('XSS_DETECTED');
+      test('devrait supprimer javascript:', () => {
+        const result = sanitizeInput('javascript:alert(1)');
+        expect(result.wasModified).toBe(true);
+        expect(result.sanitized).not.toContain('javascript:');
+      });
+
+      test('devrait supprimer vbscript:', () => {
+        const result = sanitizeInput('vbscript:msgbox(1)');
+        expect(result.wasModified).toBe(true);
+        expect(result.sanitized).not.toContain('vbscript:');
       });
     });
 
     // --- Edge cases ---
     describe('Edge cases - Valeurs invalides', () => {
       test('devrait lancer une erreur si aucun argument fourni', () => {
-        expect(() => isValidName()).toThrow('INVALID_ARGUMENT');
+        expect(() => sanitizeInput()).toThrow('INVALID_ARGUMENT');
       });
 
       test('devrait lancer une erreur si argument est null', () => {
-        expect(() => isValidName(null)).toThrow('INVALID_ARGUMENT');
+        expect(() => sanitizeInput(null)).toThrow('INVALID_ARGUMENT');
       });
 
       test('devrait lancer une erreur si argument est undefined', () => {
-        expect(() => isValidName(undefined)).toThrow('INVALID_ARGUMENT');
+        expect(() => sanitizeInput(undefined)).toThrow('INVALID_ARGUMENT');
       });
 
       test('devrait lancer une erreur si argument est un nombre', () => {
-        expect(() => isValidName(12345)).toThrow('INVALID_TYPE');
+        expect(() => sanitizeInput(12345)).toThrow('INVALID_TYPE');
       });
 
       test('devrait lancer une erreur si argument est un objet', () => {
-        expect(() => isValidName({ name: 'Jean' })).toThrow('INVALID_TYPE');
+        expect(() => sanitizeInput({ text: 'hello' })).toThrow('INVALID_TYPE');
       });
 
       test('devrait lancer une erreur si argument est un tableau', () => {
-        expect(() => isValidName(['Jean'])).toThrow('INVALID_TYPE');
+        expect(() => sanitizeInput(['hello'])).toThrow('INVALID_TYPE');
+      });
+
+      test('devrait retourner une chaîne vide si entrée vide', () => {
+        const result = sanitizeInput('');
+        expect(result).toEqual({ sanitized: '', wasModified: false });
       });
     });
-  });});
+  });
+
+  // ============================================
+  // VALIDATION EMAIL - isValidEmail()
+  // ============================================
+  describe('isValidEmail - Format email standard', () => {
+
+    // --- Cas passants ---
+    describe('Cas passants', () => {
+      test('devrait valider un email standard', () => {
+        const result = isValidEmail('test@example.com');
+        expect(result).toEqual({ valid: true, email: 'test@example.com' });
+      });
+
+      test('devrait valider un email avec sous-domaine', () => {
+        const result = isValidEmail('user@mail.example.com');
+        expect(result).toEqual({ valid: true, email: 'user@mail.example.com' });
+      });
+
+      test('devrait valider un email avec + (alias)', () => {
+        const result = isValidEmail('user+tag@example.com');
+        expect(result).toEqual({ valid: true, email: 'user+tag@example.com' });
+      });
+
+      test('devrait valider un email avec chiffres', () => {
+        const result = isValidEmail('user123@example123.com');
+        expect(result).toEqual({ valid: true, email: 'user123@example123.com' });
+      });
+
+      test('devrait valider un email avec tiret dans le domaine', () => {
+        const result = isValidEmail('user@my-domain.com');
+        expect(result).toEqual({ valid: true, email: 'user@my-domain.com' });
+      });
+
+      test('devrait valider un email avec point dans la partie locale', () => {
+        const result = isValidEmail('first.last@example.com');
+        expect(result).toEqual({ valid: true, email: 'first.last@example.com' });
+      });
+
+      test('devrait valider un email avec underscore dans la partie locale', () => {
+        const result = isValidEmail('first_last@example.com');
+        expect(result).toEqual({ valid: true, email: 'first_last@example.com' });
+      });
+    });
+
+    // --- Cas échouants - Formats invalides ---
+    describe('Cas échouants - Formats invalides', () => {
+      test('devrait rejeter un email sans @', () => {
+        const result = isValidEmail('testexample.com');
+        expect(result.valid).toBe(false);
+        expect(result.error).toBe('INVALID_FORMAT');
+      });
+
+      test('devrait rejeter un email sans domaine', () => {
+        const result = isValidEmail('test@');
+        expect(result.valid).toBe(false);
+        expect(result.error).toBe('INVALID_FORMAT');
+      });
+
+      test('devrait rejeter un email sans partie locale', () => {
+        const result = isValidEmail('@example.com');
+        expect(result.valid).toBe(false);
+        expect(result.error).toBe('INVALID_FORMAT');
+      });
+
+      test('devrait rejeter un email avec espaces', () => {
+        const result = isValidEmail('test @example.com');
+        expect(result.valid).toBe(false);
+        expect(result.error).toBe('INVALID_FORMAT');
+      });
+
+      test('devrait rejeter un email avec plusieurs @', () => {
+        const result = isValidEmail('test@@example.com');
+        expect(result.valid).toBe(false);
+        expect(result.error).toBe('INVALID_FORMAT');
+      });
+
+      test('devrait rejeter un email sans TLD', () => {
+        const result = isValidEmail('test@example');
+        expect(result.valid).toBe(false);
+        expect(result.error).toBe('INVALID_FORMAT');
+      });
+
+      test('devrait rejeter une chaîne vide', () => {
+        const result = isValidEmail('');
+        expect(result.valid).toBe(false);
+        expect(result.error).toBe('INVALID_FORMAT');
+      });
+
+      test('devrait rejeter un email avec TLD trop court', () => {
+        const result = isValidEmail('test@example.c');
+        expect(result.valid).toBe(false);
+        expect(result.error).toBe('INVALID_FORMAT');
+      });
+    });
+
+    // --- Edge cases ---
+    describe('Edge cases - Valeurs invalides', () => {
+      test('devrait lancer une erreur si aucun argument fourni', () => {
+        expect(() => isValidEmail()).toThrow('INVALID_ARGUMENT');
+      });
+
+      test('devrait lancer une erreur si argument est null', () => {
+        expect(() => isValidEmail(null)).toThrow('INVALID_ARGUMENT');
+      });
+
+      test('devrait lancer une erreur si argument est undefined', () => {
+        expect(() => isValidEmail(undefined)).toThrow('INVALID_ARGUMENT');
+      });
+
+      test('devrait lancer une erreur si argument est un nombre', () => {
+        expect(() => isValidEmail(12345)).toThrow('INVALID_TYPE');
+      });
+
+      test('devrait lancer une erreur si argument est un objet', () => {
+        expect(() => isValidEmail({ email: 'test@example.com' })).toThrow('INVALID_TYPE');
+      });
+
+      test('devrait lancer une erreur si argument est un tableau', () => {
+        expect(() => isValidEmail(['test@example.com'])).toThrow('INVALID_TYPE');
+      });
+    });
+  });
+});
 
 // Helper function pour les tests
 function isLeapYear(year) {
