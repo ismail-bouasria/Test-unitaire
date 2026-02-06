@@ -178,3 +178,112 @@ export function isValidName(name) {
     return { valid: false, error: 'INVALID_CHARACTERS' };
   }
 }
+
+/**
+ * Nettoie une chaîne de caractères en supprimant les éléments potentiellement dangereux (XSS).
+ * Supprime les balises HTML, les attributs d'événements et les scripts.
+ * 
+ * @param {string} input - La chaîne à nettoyer
+ * @returns {Object} Objet contenant { sanitized: string, wasModified: boolean }
+ * @throws {Error} INVALID_ARGUMENT - Si aucun argument ou argument null/undefined
+ * @throws {Error} INVALID_TYPE - Si l'argument n'est pas une chaîne de caractères
+ * 
+ * @example
+ * // Texte sans XSS
+ * const result = sanitizeInput('Bonjour le monde');
+ * // { sanitized: 'Bonjour le monde', wasModified: false }
+ * 
+ * @example
+ * // Texte avec XSS
+ * const result = sanitizeInput('<script>alert("xss")</script>');
+ * // { sanitized: 'alert("xss")', wasModified: true }
+ */
+export function sanitizeInput(input) {
+  // Validation des arguments
+  if (input === undefined || input === null) {
+    throw new Error('INVALID_ARGUMENT');
+  }
+
+  if (typeof input !== 'string') {
+    throw new Error('INVALID_TYPE');
+  }
+
+  // Chaîne vide
+  if (input === '') {
+    return { sanitized: '', wasModified: false };
+  }
+
+  let sanitized = input;
+  const original = input;
+
+  // Supprimer les balises script et leur contenu
+  sanitized = sanitized.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '');
+
+  // Supprimer les balises style et leur contenu
+  sanitized = sanitized.replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, '');
+
+  // Supprimer toutes les balises HTML
+  sanitized = sanitized.replace(/<[^>]*>/g, '');
+
+  // Supprimer javascript: et vbscript:
+  sanitized = sanitized.replace(/javascript:/gi, '');
+  sanitized = sanitized.replace(/vbscript:/gi, '');
+
+  // Supprimer les attributs d'événements (onclick, onerror, onload, etc.)
+  sanitized = sanitized.replace(/\bon\w+\s*=/gi, '');
+
+  // Nettoyer les espaces multiples
+  sanitized = sanitized.replace(/\s+/g, ' ').trim();
+
+  // Si le texte original ne contenait que des balises, sanitized peut être vide
+  // On préserve les espaces au début/fin si original les avait
+  if (original.trim() === '' && sanitized === '') {
+    sanitized = '';
+  }
+
+  const wasModified = sanitized !== original;
+
+  return { sanitized, wasModified };
+}
+
+/**
+ * Valide un format d'adresse email standard.
+ * 
+ * @param {string} email - L'adresse email à valider
+ * @returns {Object} Objet contenant { valid: boolean, email?: string, error?: string }
+ * @throws {Error} INVALID_ARGUMENT - Si aucun argument ou argument null/undefined
+ * @throws {Error} INVALID_TYPE - Si l'argument n'est pas une chaîne de caractères
+ * 
+ * @example
+ * // Email valide
+ * const result = isValidEmail('user@example.com');
+ * // { valid: true, email: 'user@example.com' }
+ * 
+ * @example
+ * // Email invalide
+ * const result = isValidEmail('invalid-email');
+ * // { valid: false, error: 'INVALID_FORMAT' }
+ */
+export function isValidEmail(email) {
+  // Validation des arguments
+  if (email === undefined || email === null) {
+    throw new Error('INVALID_ARGUMENT');
+  }
+
+  if (typeof email !== 'string') {
+    throw new Error('INVALID_TYPE');
+  }
+
+  // Regex pour email valide
+  // - partie locale : lettres, chiffres, points, underscores, tirets, plus
+  // - @ obligatoire
+  // - domaine : lettres, chiffres, tirets
+  // - TLD : au moins 2 caractères
+  const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+
+  if (emailRegex.test(email)) {
+    return { valid: true, email };
+  } else {
+    return { valid: false, error: 'INVALID_FORMAT' };
+  }
+}
