@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<coverage generated="1770400187496" clover="3.2.0">
-  <project timestamp="1770400187496" name="All files">
+<coverage generated="1770400395156" clover="3.2.0">
+  <project timestamp="1770400395156" name="All files">
     <metrics statements="83" coveredstatements="82" conditionals="73" coveredconditionals="71" methods="7" coveredmethods="7" elements="163" coveredelements="160" complexity="0" loc="83" ncloc="83" packages="1" files="2" classes="2"/>
     <file name="module.js" path="/Users/isma/Desktop/Ynov-Connect/Test unitaire/module.js">
       <metrics statements="15" coveredstatements="15" conditionals="16" coveredconditionals="16" methods="1" coveredmethods="1"/>
