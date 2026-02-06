@@ -1,4 +1,4 @@
-import { isAdult } from './validator.js';
+import { isAdult, isValidPostalCode } from './validator.js';
 
 describe('Validator Module', () => {
   
@@ -130,6 +130,106 @@ describe('Validator Module', () => {
       test('devrait lancer une erreur si la date est dans le futur', () => {
         const futureDate = new Date(today.getFullYear() + 1, 0, 1);
         expect(() => isAdult(futureDate)).toThrow('DATE_IN_FUTURE');
+      });
+    });
+  });
+
+  // ============================================
+  // VALIDATION CODE POSTAL - isValidPostalCode()
+  // ============================================
+  describe('isValidPostalCode - Code postal français (5 chiffres)', () => {
+
+    // --- Cas passants ---
+    describe('Cas passants', () => {
+      test('devrait valider un code postal standard (75001 Paris)', () => {
+        const result = isValidPostalCode('75001');
+        expect(result).toEqual({ valid: true, postalCode: '75001' });
+      });
+
+      test('devrait valider un code postal commençant par 0 (01000 Bourg-en-Bresse)', () => {
+        const result = isValidPostalCode('01000');
+        expect(result).toEqual({ valid: true, postalCode: '01000' });
+      });
+
+      test('devrait valider un code postal DOM-TOM (97100 Guadeloupe)', () => {
+        const result = isValidPostalCode('97100');
+        expect(result).toEqual({ valid: true, postalCode: '97100' });
+      });
+
+      test('devrait valider un code postal Corse (20000)', () => {
+        const result = isValidPostalCode('20000');
+        expect(result).toEqual({ valid: true, postalCode: '20000' });
+      });
+
+      test('devrait valider Monaco (98000)', () => {
+        const result = isValidPostalCode('98000');
+        expect(result).toEqual({ valid: true, postalCode: '98000' });
+      });
+    });
+
+    // --- Cas échouants ---
+    describe('Cas échouants - Formats invalides', () => {
+      test('devrait rejeter un code postal avec moins de 5 chiffres', () => {
+        const result = isValidPostalCode('7500');
+        expect(result.valid).toBe(false);
+        expect(result.error).toBe('INVALID_FORMAT');
+      });
+
+      test('devrait rejeter un code postal avec plus de 5 chiffres', () => {
+        const result = isValidPostalCode('750001');
+        expect(result.valid).toBe(false);
+        expect(result.error).toBe('INVALID_FORMAT');
+      });
+
+      test('devrait rejeter un code postal avec des lettres', () => {
+        const result = isValidPostalCode('75OO1');
+        expect(result.valid).toBe(false);
+        expect(result.error).toBe('INVALID_FORMAT');
+      });
+
+      test('devrait rejeter un code postal avec des espaces', () => {
+        const result = isValidPostalCode('75 001');
+        expect(result.valid).toBe(false);
+        expect(result.error).toBe('INVALID_FORMAT');
+      });
+
+      test('devrait rejeter un code postal avec des caractères spéciaux', () => {
+        const result = isValidPostalCode('75-001');
+        expect(result.valid).toBe(false);
+        expect(result.error).toBe('INVALID_FORMAT');
+      });
+
+      test('devrait rejeter une chaîne vide', () => {
+        const result = isValidPostalCode('');
+        expect(result.valid).toBe(false);
+        expect(result.error).toBe('INVALID_FORMAT');
+      });
+    });
+
+    // --- Edge cases ---
+    describe('Edge cases - Valeurs invalides', () => {
+      test('devrait lancer une erreur si aucun argument fourni', () => {
+        expect(() => isValidPostalCode()).toThrow('INVALID_ARGUMENT');
+      });
+
+      test('devrait lancer une erreur si argument est null', () => {
+        expect(() => isValidPostalCode(null)).toThrow('INVALID_ARGUMENT');
+      });
+
+      test('devrait lancer une erreur si argument est undefined', () => {
+        expect(() => isValidPostalCode(undefined)).toThrow('INVALID_ARGUMENT');
+      });
+
+      test('devrait lancer une erreur si argument est un nombre', () => {
+        expect(() => isValidPostalCode(75001)).toThrow('INVALID_TYPE');
+      });
+
+      test('devrait lancer une erreur si argument est un objet', () => {
+        expect(() => isValidPostalCode({ code: '75001' })).toThrow('INVALID_TYPE');
+      });
+
+      test('devrait lancer une erreur si argument est un tableau', () => {
+        expect(() => isValidPostalCode(['75001'])).toThrow('INVALID_TYPE');
       });
     });
   });

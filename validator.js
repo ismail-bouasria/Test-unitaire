@@ -77,3 +77,16 @@ function calculateAge(birthDate, currentDate) {
 
   return age;
 }
+
+/**
+ * Valide un code postal français (5 chiffres exactement).
+ * 
+ * @param {string} postalCode - Le code postal à valider
+ * @returns {Object} Objet contenant { valid: boolean, postalCode?: string, error?: string }
+ * @throws {Error} INVALID_ARGUMENT - Si aucun argument ou argument null/undefined
+ * @throws {Error} INVALID_TYPE - Si l'argument n'est pas une chaîne de caractères
+ */
+export function isValidPostalCode(postalCode) {
+  // TODO: Implémenter après validation des tests (TDD)
+  throw new Error('NOT_IMPLEMENTED');
+}
