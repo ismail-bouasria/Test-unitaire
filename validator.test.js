@@ -1,4 +1,4 @@
-import { isAdult, isValidPostalCode } from './validator.js';
+import { isAdult, isValidPostalCode, isValidName } from './validator.js';
 
 describe('Validator Module', () => {
   
@@ -233,7 +233,290 @@ describe('Validator Module', () => {
       });
     });
   });
-});
+
+  // ============================================
+  // VALIDATION IDENTITÉ - isValidName()
+  // ============================================
+  describe('isValidName - Nom/Prénom valide (sans chiffres ni caractères spéciaux)', () => {
+
+    // --- Cas passants ---
+    describe('Cas passants', () => {
+      test('devrait valider un prénom simple', () => {
+        const result = isValidName('Jean');
+        expect(result).toEqual({ valid: true, name: 'Jean' });
+      });
+
+      test('devrait valider un nom avec accent', () => {
+        const result = isValidName('Héloïse');
+        expect(result).toEqual({ valid: true, name: 'Héloïse' });
+      });
+
+      test('devrait valider un nom composé avec tiret', () => {
+        const result = isValidName('Jean-Pierre');
+        expect(result).toEqual({ valid: true, name: 'Jean-Pierre' });
+      });
+
+      test('devrait valider un nom avec apostrophe', () => {
+        const result = isValidName("O'Connor");
+        expect(result).toEqual({ valid: true, name: "O'Connor" });
+      });
+
+      test('devrait valider un nom avec espace (nom composé)', () => {
+        const result = isValidName('De La Fontaine');
+        expect(result).toEqual({ valid: true, name: 'De La Fontaine' });
+      });
+
+      test('devrait valider un prénom avec accents multiples', () => {
+        const result = isValidName('François');
+        expect(result).toEqual({ valid: true, name: 'François' });
+      });
+
+      test('devrait valider un nom nordique avec caractères spéciaux', () => {
+        const result = isValidName('Björk');
+        expect(result).toEqual({ valid: true, name: 'Björk' });
+      });
+    });
+
+    // --- Cas échouants ---
+    describe('Cas échouants - Caractères invalides', () => {
+      test('devrait rejeter un nom avec des chiffres', () => {
+        const result = isValidName('Jean123');
+        expect(result.valid).toBe(false);
+        expect(result.error).toBe('INVALID_CHARACTERS');
+      });
+
+      test('devrait rejeter un nom avec des caractères spéciaux (@)', () => {
+        const result = isValidName('Jean@Dupont');
+        expect(result.valid).toBe(false);
+        expect(result.error).toBe('INVALID_CHARACTERS');
+      });
+
+      test('devrait rejeter un nom avec un underscore', () => {
+        const result = isValidName('Jean_Pierre');
+        expect(result.valid).toBe(false);
+        expect(result.error).toBe('INVALID_CHARACTERS');
+      });
+
+      test('devrait rejeter un nom avec des parenthèses', () => {
+        const result = isValidName('Jean(Pierre)');
+        expect(result.valid).toBe(false);
+        expect(result.error).toBe('INVALID_CHARACTERS');
+      });
+
+      test('devrait rejeter une chaîne vide', () => {
+        const result = isValidName('');
+        expect(result.valid).toBe(false);
+        expect(result.error).toBe('EMPTY_NAME');
+      });
+
+      test('devrait rejeter un nom avec seulement des espaces', () => {
+        const result = isValidName('   ');
+        expect(result.valid).toBe(false);
+        expect(result.error).toBe('EMPTY_NAME');
+      });
+    });
+
+    // --- Sécurité XSS ---
+    describe('Sécurité - Protection XSS dans les noms', () => {
+      test('devrait rejeter un nom contenant une balise script', () => {
+        const result = isValidName('<script>alert("xss")</script>');
+        expect(result.valid).toBe(false);
+        expect(result.error).toBe('XSS_DETECTED');
+      });
+
+      test('devrait rejeter un nom contenant une balise HTML', () => {
+        const result = isValidName('<b>Jean</b>');
+        expect(result.valid).toBe(false);
+        expect(result.error).toBe('XSS_DETECTED');
+      });
+
+      test('devrait rejeter un nom avec balise img onerror', () => {
+        const result = isValidName('<img src=x onerror=alert(1)>');
+        expect(result.valid).toBe(false);
+        expect(result.error).toBe('XSS_DETECTED');
+      });
+
+      test('devrait rejeter un nom avec chevrons isolés', () => {
+        const result = isValidName('Jean<>Pierre');
+        expect(result.valid).toBe(false);
+        expect(result.error).toBe('XSS_DETECTED');
+      });
+    });
+
+    // --- Edge cases ---
+    describe('Edge cases - Valeurs invalides', () => {
+      test('devrait lancer une erreur si aucun argument fourni', () => {
+        expect(() => isValidName()).toThrow('INVALID_ARGUMENT');
+      });
+
+      test('devrait lancer une erreur si argument est null', () => {
+        expect(() => isValidName(null)).toThrow('INVALID_ARGUMENT');
+      });
+
+      test('devrait lancer une erreur si argument est undefined', () => {
+        expect(() => isValidName(undefined)).toThrow('INVALID_ARGUMENT');
+      });
+
+      test('devrait lancer une erreur si argument est un nombre', () => {
+        expect(() => isValidName(123)).toThrow('INVALID_TYPE');
+      });
+
+      test('devrait lancer une erreur si argument est un objet', () => {
+        expect(() => isValidName({ name: 'Jean' })).toThrow('INVALID_TYPE');
+      });
+
+      test('devrait lancer une erreur si argument est un tableau', () => {
+        expect(() => isValidName(['Jean'])).toThrow('INVALID_TYPE');
+      });
+    });
+  });
+  // ============================================
+  // VALIDATION IDENTITÉ - isValidName()
+  // ============================================
+  describe('isValidName - Nom/Prénom valide (sans chiffres ni caractères spéciaux)', () => {
+
+    // --- Cas passants ---
+    describe('Cas passants', () => {
+      test('devrait valider un prénom simple', () => {
+        const result = isValidName('Jean');
+        expect(result).toEqual({ valid: true, name: 'Jean' });
+      });
+
+      test('devrait valider un nom avec accent', () => {
+        const result = isValidName('François');
+        expect(result).toEqual({ valid: true, name: 'François' });
+      });
+
+      test('devrait valider un nom composé avec tiret', () => {
+        const result = isValidName('Jean-Pierre');
+        expect(result).toEqual({ valid: true, name: 'Jean-Pierre' });
+      });
+
+      test('devrait valider un nom avec apostrophe', () => {
+        const result = isValidName("O'Connor");
+        expect(result).toEqual({ valid: true, name: "O'Connor" });
+      });
+
+      test('devrait valider un nom avec plusieurs accents', () => {
+        const result = isValidName('Éléonore');
+        expect(result).toEqual({ valid: true, name: 'Éléonore' });
+      });
+
+      test('devrait valider un nom avec espace', () => {
+        const result = isValidName('De La Fontaine');
+        expect(result).toEqual({ valid: true, name: 'De La Fontaine' });
+      });
+
+      test('devrait valider des caractères accentués variés', () => {
+        const result = isValidName('Müller');
+        expect(result).toEqual({ valid: true, name: 'Müller' });
+      });
+
+      test('devrait valider un nom avec cédille', () => {
+        const result = isValidName('Françoise');
+        expect(result).toEqual({ valid: true, name: 'Françoise' });
+      });
+    });
+
+    // --- Cas échouants ---
+    describe('Cas échouants - Caractères invalides', () => {
+      test('devrait rejeter un nom avec des chiffres', () => {
+        const result = isValidName('Jean123');
+        expect(result.valid).toBe(false);
+        expect(result.error).toBe('INVALID_CHARACTERS');
+      });
+
+      test('devrait rejeter un nom avec @ ', () => {
+        const result = isValidName('Jean@Doe');
+        expect(result.valid).toBe(false);
+        expect(result.error).toBe('INVALID_CHARACTERS');
+      });
+
+      test('devrait rejeter un nom avec #', () => {
+        const result = isValidName('Jean#Doe');
+        expect(result.valid).toBe(false);
+        expect(result.error).toBe('INVALID_CHARACTERS');
+      });
+
+      test('devrait rejeter un nom avec underscore', () => {
+        const result = isValidName('Jean_Doe');
+        expect(result.valid).toBe(false);
+        expect(result.error).toBe('INVALID_CHARACTERS');
+      });
+
+      test('devrait rejeter une chaîne vide', () => {
+        const result = isValidName('');
+        expect(result.valid).toBe(false);
+        expect(result.error).toBe('EMPTY_NAME');
+      });
+
+      test('devrait rejeter un nom avec seulement des espaces', () => {
+        const result = isValidName('   ');
+        expect(result.valid).toBe(false);
+        expect(result.error).toBe('EMPTY_NAME');
+      });
+    });
+
+    // --- Sécurité XSS ---
+    describe('Sécurité - Injection XSS', () => {
+      test('devrait rejeter une balise script', () => {
+        const result = isValidName('<script>alert("xss")</script>');
+        expect(result.valid).toBe(false);
+        expect(result.error).toBe('XSS_DETECTED');
+      });
+
+      test('devrait rejeter une balise HTML', () => {
+        const result = isValidName('<b>Jean</b>');
+        expect(result.valid).toBe(false);
+        expect(result.error).toBe('XSS_DETECTED');
+      });
+
+      test('devrait rejeter une injection avec < et >', () => {
+        const result = isValidName('Jean<img src=x onerror=alert(1)>');
+        expect(result.valid).toBe(false);
+        expect(result.error).toBe('XSS_DETECTED');
+      });
+
+      test('devrait rejeter javascript:', () => {
+        const result = isValidName('javascript:alert(1)');
+        expect(result.valid).toBe(false);
+        expect(result.error).toBe('XSS_DETECTED');
+      });
+
+      test('devrait rejeter onclick=', () => {
+        const result = isValidName('Jean onclick=alert(1)');
+        expect(result.valid).toBe(false);
+        expect(result.error).toBe('XSS_DETECTED');
+      });
+    });
+
+    // --- Edge cases ---
+    describe('Edge cases - Valeurs invalides', () => {
+      test('devrait lancer une erreur si aucun argument fourni', () => {
+        expect(() => isValidName()).toThrow('INVALID_ARGUMENT');
+      });
+
+      test('devrait lancer une erreur si argument est null', () => {
+        expect(() => isValidName(null)).toThrow('INVALID_ARGUMENT');
+      });
+
+      test('devrait lancer une erreur si argument est undefined', () => {
+        expect(() => isValidName(undefined)).toThrow('INVALID_ARGUMENT');
+      });
+
+      test('devrait lancer une erreur si argument est un nombre', () => {
+        expect(() => isValidName(12345)).toThrow('INVALID_TYPE');
+      });
+
+      test('devrait lancer une erreur si argument est un objet', () => {
+        expect(() => isValidName({ name: 'Jean' })).toThrow('INVALID_TYPE');
+      });
+
+      test('devrait lancer une erreur si argument est un tableau', () => {
+        expect(() => isValidName(['Jean'])).toThrow('INVALID_TYPE');
+      });
+    });
+  });});
 
 // Helper function pour les tests
 function isLeapYear(year) {

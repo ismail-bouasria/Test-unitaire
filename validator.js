@@ -115,3 +115,17 @@ export function isValidPostalCode(postalCode) {
     return { valid: false, error: 'INVALID_FORMAT' };
   }
 }
+
+/**
+ * Valide un nom ou prénom (sans chiffres ni caractères spéciaux, sauf accents et tirets).
+ * Protège contre les injections XSS.
+ * 
+ * @param {string} name - Le nom ou prénom à valider
+ * @returns {Object} Objet contenant { valid: boolean, name?: string, error?: string }
+ * @throws {Error} INVALID_ARGUMENT - Si aucun argument ou argument null/undefined
+ * @throws {Error} INVALID_TYPE - Si l'argument n'est pas une chaîne de caractères
+ */
+export function isValidName(name) {
+  // TODO: Implémenter après validation des tests (TDD)
+  throw new Error('NOT_IMPLEMENTED');
+}
