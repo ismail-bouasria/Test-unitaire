@@ -124,8 +124,57 @@ export function isValidPostalCode(postalCode) {
  * @returns {Object} Objet contenant { valid: boolean, name?: string, error?: string }
  * @throws {Error} INVALID_ARGUMENT - Si aucun argument ou argument null/undefined
  * @throws {Error} INVALID_TYPE - Si l'argument n'est pas une chaîne de caractères
+ * 
+ * @example
+ * // Nom valide
+ * const result = isValidName('Jean-Pierre');
+ * // { valid: true, name: 'Jean-Pierre' }
+ * 
+ * @example
+ * // Nom avec XSS
+ * const result = isValidName('<script>alert("xss")</script>');
+ * // { valid: false, error: 'XSS_DETECTED' }
  */
 export function isValidName(name) {
-  // TODO: Implémenter après validation des tests (TDD)
-  throw new Error('NOT_IMPLEMENTED');
+  // Validation des arguments
+  if (name === undefined || name === null) {
+    throw new Error('INVALID_ARGUMENT');
+  }
+
+  if (typeof name !== 'string') {
+    throw new Error('INVALID_TYPE');
+  }
+
+  // Vérification nom vide ou espaces uniquement
+  if (name.trim() === '') {
+    return { valid: false, error: 'EMPTY_NAME' };
+  }
+
+  // Détection XSS - balises HTML et patterns dangereux
+  const xssPatterns = [
+    /<[^>]*>/,                    // Balises HTML
+    /javascript:/i,               // javascript:
+    /on\w+=/i,                    // onclick=, onerror=, etc.
+    /<script/i,                   // <script
+    /<img/i,                      // <img
+    /<iframe/i,                   // <iframe
+    /<link/i,                     // <link
+    /<style/i,                    // <style
+  ];
+
+  for (const pattern of xssPatterns) {
+    if (pattern.test(name)) {
+      return { valid: false, error: 'XSS_DETECTED' };
+    }
+  }
+
+  // Regex pour nom valide : lettres (avec accents), espaces, tirets, apostrophes
+  // Autorise les caractères Unicode des alphabets latins avec accents
+  const validNameRegex = /^[a-zA-ZàâäéèêëïîôùûüçœæÀÂÄÉÈÊËÏÎÔÙÛÜÇŒÆäöüßÄÖÜ\s\-']+$/;
+
+  if (validNameRegex.test(name)) {
+    return { valid: true, name };
+  } else {
+    return { valid: false, error: 'INVALID_CHARACTERS' };
+  }
 }
