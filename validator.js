@@ -85,8 +85,33 @@ function calculateAge(birthDate, currentDate) {
  * @returns {Object} Objet contenant { valid: boolean, postalCode?: string, error?: string }
  * @throws {Error} INVALID_ARGUMENT - Si aucun argument ou argument null/undefined
  * @throws {Error} INVALID_TYPE - Si l'argument n'est pas une chaîne de caractères
+ * 
+ * @example
+ * // Code postal valide
+ * const result = isValidPostalCode('75001');
+ * // { valid: true, postalCode: '75001' }
+ * 
+ * @example
+ * // Code postal invalide
+ * const result = isValidPostalCode('7500');
+ * // { valid: false, error: 'INVALID_FORMAT' }
  */
 export function isValidPostalCode(postalCode) {
-  // TODO: Implémenter après validation des tests (TDD)
-  throw new Error('NOT_IMPLEMENTED');
+  // Validation des arguments
+  if (postalCode === undefined || postalCode === null) {
+    throw new Error('INVALID_ARGUMENT');
+  }
+
+  if (typeof postalCode !== 'string') {
+    throw new Error('INVALID_TYPE');
+  }
+
+  // Regex pour code postal français : exactement 5 chiffres
+  const postalCodeRegex = /^[0-9]{5}$/;
+
+  if (postalCodeRegex.test(postalCode)) {
+    return { valid: true, postalCode };
+  } else {
+    return { valid: false, error: 'INVALID_FORMAT' };
+  }
 }
