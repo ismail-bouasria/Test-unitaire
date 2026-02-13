@@ -17,7 +17,9 @@ const validateArgument = (value, expectedType = 'string') => {
 };
 
 export function isAdult(birthDate) {
-  validateArgument(birthDate, 'object'); // Date is object
+  if (birthDate === undefined || birthDate === null) {
+    throw new Error('INVALID_ARGUMENT');
+  }
 
   if (!(birthDate instanceof Date)) {
     throw new Error('INVALID_DATE_TYPE');
