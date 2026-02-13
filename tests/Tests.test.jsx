@@ -1,6 +1,6 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import '@testing-library/jest-dom/extend-expect';
+import '@testing-library/jest-dom';
 import Formulaire from '../src/components/Formulaire.jsx';
 
 beforeEach(() => {
@@ -10,12 +10,12 @@ beforeEach(() => {
 test('Scénario utilisateur chaotique: erreurs puis corrections, soumission, localStorage', async () => {
   render(<Formulaire />);
 
-  const nom = screen.getByLabelText(/Nom/i);
-  const prenom = screen.getByLabelText(/Prénom/i);
-  const email = screen.getByLabelText(/Email/i);
-  const dob = screen.getByLabelText(/Date de naissance/i);
-  const postal = screen.getByLabelText(/Code Postal/i);
-  const city = screen.getByLabelText(/Ville/i);
+  const nom = screen.getByLabelText(/^Nom$/i);
+  const prenom = screen.getByLabelText(/^Prénom$/i);
+  const email = screen.getByLabelText(/^Email$/i);
+  const dob = screen.getByLabelText(/^Date de naissance$/i);
+  const postal = screen.getByLabelText(/^Code Postal$/i);
+  const city = screen.getByLabelText(/^Ville$/i);
   const submit = screen.getByRole('button', { name: /Soumettre/i });
 
   // Initialement, le bouton est disabled
@@ -26,13 +26,13 @@ test('Scénario utilisateur chaotique: erreurs puis corrections, soumission, loc
   fireEvent.blur(nom);
   expect(await screen.findByText(/XSS_DETECTED|XSS/i)).toBeInTheDocument();
   const nomError = screen.getByText(/XSS_DETECTED|XSS/i);
-  expect(nomError).toHaveStyle('color: red');
+  expect(nomError).toHaveStyle('color: rgb(255, 0, 0)');
 
   fireEvent.change(email, { target: { value: 'invalid-email' } });
   fireEvent.blur(email);
   expect(await screen.findByText(/INVALID_FORMAT/i)).toBeInTheDocument();
   const emailError = screen.getByText(/INVALID_FORMAT/i);
-  expect(emailError).toHaveStyle('color: red');
+  expect(emailError).toHaveStyle('color: rgb(255, 0, 0)');
 
   // Le bouton reste disabled
   expect(submit).toBeDisabled();
