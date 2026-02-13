@@ -199,6 +199,35 @@ describe('Tests d\'Intégration - Formulaire React', () => {
       expect(submit).toBeDisabled();
     });
 
+    test('Soumission avec erreurs : pas de sauvegarde, pas de reset', async () => {
+      render(<Formulaire />);
+
+      const nom = screen.getByLabelText(/^Nom$/i);
+      const email = screen.getByLabelText(/^Email$/i);
+      const submit = screen.getByRole('button', { name: /Soumettre/i });
+
+      // Saisir des données invalides
+      fireEvent.change(nom, { target: { value: '<script>alert(1)</script>' } });
+      fireEvent.change(email, { target: { value: 'invalid-email' } });
+
+      // Bouton disabled
+      expect(submit).toBeDisabled();
+
+      // Tenter de soumettre (même si disabled, pour couvrir le code)
+      fireEvent.click(submit);
+
+      // Pas de toaster
+      expect(screen.queryByRole('status')).not.toBeInTheDocument();
+
+      // localStorage vide
+      const saved = JSON.parse(localStorage.getItem('form_submissions') || '[]');
+      expect(saved.length).toBe(0);
+
+      // Champs non vidés
+      expect(nom.value).toBe('<script>alert(1)</script>');
+      expect(email.value).toBe('invalid-email');
+    });
+
   });
 
 });
