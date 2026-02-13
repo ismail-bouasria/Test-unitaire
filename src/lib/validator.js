@@ -1,11 +1,23 @@
 /**
- * Copie de validator.js dans src/lib pour organisation du projet
+ * Module de validation - Fonctions utilitaires pour valider les données utilisateur
+ * Respecte SRP : chaque fonction a une seule responsabilité de validation
  */
 
-export function isAdult(birthDate) {
-  if (birthDate === undefined || birthDate === null) {
+/**
+ * Helper pour valider les arguments communs (non-null, type string)
+ * Respecte DRY : évite la répétition des checks de base
+ */
+const validateArgument = (value, expectedType = 'string') => {
+  if (value === undefined || value === null) {
     throw new Error('INVALID_ARGUMENT');
   }
+  if (typeof value !== expectedType) {
+    throw new Error('INVALID_TYPE');
+  }
+};
+
+export function isAdult(birthDate) {
+  validateArgument(birthDate, 'object'); // Date is object
 
   if (!(birthDate instanceof Date)) {
     throw new Error('INVALID_DATE_TYPE');
@@ -21,11 +33,9 @@ export function isAdult(birthDate) {
   }
 
   const age = calculateAge(birthDate, today);
-  if (age >= 18) {
-    return { valid: true, age };
-  } else {
-    return { valid: false, age, error: 'AGE_UNDER_18' };
-  }
+  return age >= 18
+    ? { valid: true, age }
+    : { valid: false, age, error: 'AGE_UNDER_18' };
 }
 
 function calculateAge(birthDate, currentDate) {
@@ -39,30 +49,16 @@ function calculateAge(birthDate, currentDate) {
 }
 
 export function isValidPostalCode(postalCode) {
-  if (postalCode === undefined || postalCode === null) {
-    throw new Error('INVALID_ARGUMENT');
-  }
-
-  if (typeof postalCode !== 'string') {
-    throw new Error('INVALID_TYPE');
-  }
+  validateArgument(postalCode);
 
   const postalCodeRegex = /^[0-9]{5}$/;
-  if (postalCodeRegex.test(postalCode)) {
-    return { valid: true, postalCode };
-  } else {
-    return { valid: false, error: 'INVALID_FORMAT' };
-  }
+  return postalCodeRegex.test(postalCode)
+    ? { valid: true, postalCode }
+    : { valid: false, error: 'INVALID_FORMAT' };
 }
 
 export function isValidName(name) {
-  if (name === undefined || name === null) {
-    throw new Error('INVALID_ARGUMENT');
-  }
-
-  if (typeof name !== 'string') {
-    throw new Error('INVALID_TYPE');
-  }
+  validateArgument(name);
 
   if (name.trim() === '') {
     return { valid: false, error: 'EMPTY_NAME' };
@@ -79,28 +75,18 @@ export function isValidName(name) {
     /<style/i,
   ];
 
-  for (const pattern of xssPatterns) {
-    if (pattern.test(name)) {
-      return { valid: false, error: 'XSS_DETECTED' };
-    }
+  if (xssPatterns.some(pattern => pattern.test(name))) {
+    return { valid: false, error: 'XSS_DETECTED' };
   }
 
   const validNameRegex = /^[a-zA-ZàâäéèêëïîôùûüçœæÀÂÄÉÈÊËÏÎÔÙÛÜÇŒÆäöüßÄÖÜ\s\-']+$/;
-  if (validNameRegex.test(name)) {
-    return { valid: true, name };
-  } else {
-    return { valid: false, error: 'INVALID_CHARACTERS' };
-  }
+  return validNameRegex.test(name)
+    ? { valid: true, name }
+    : { valid: false, error: 'INVALID_CHARACTERS' };
 }
 
 export function sanitizeInput(input) {
-  if (input === undefined || input === null) {
-    throw new Error('INVALID_ARGUMENT');
-  }
-
-  if (typeof input !== 'string') {
-    throw new Error('INVALID_TYPE');
-  }
+  validateArgument(input);
 
   if (input === '') {
     return { sanitized: '', wasModified: false };
@@ -108,33 +94,40 @@ export function sanitizeInput(input) {
 
   let sanitized = input;
   const original = input;
+
+  // Supprimer scripts et styles
   sanitized = sanitized.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '');
   sanitized = sanitized.replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, '');
+
+  // Supprimer toutes les balises HTML
   sanitized = sanitized.replace(/<[^>]*>/g, '');
+
+  // Supprimer les protocoles dangereux
   sanitized = sanitized.replace(/javascript:/gi, '');
   sanitized = sanitized.replace(/vbscript:/gi, '');
+
+  // Supprimer les attributs d'événements
   sanitized = sanitized.replace(/\bon\w+\s*=/gi, '');
+
+  // Normaliser les espaces
   sanitized = sanitized.replace(/\s+/g, ' ').trim();
+
+  // Gérer les cas où l'input était seulement des espaces
   if (original.trim() === '' && sanitized === '') {
     sanitized = '';
   }
-  const wasModified = sanitized !== original;
-  return { sanitized, wasModified };
+
+  return {
+    sanitized,
+    wasModified: sanitized !== original
+  };
 }
 
 export function isValidEmail(email) {
-  if (email === undefined || email === null) {
-    throw new Error('INVALID_ARGUMENT');
-  }
-
-  if (typeof email !== 'string') {
-    throw new Error('INVALID_TYPE');
-  }
+  validateArgument(email);
 
   const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-  if (emailRegex.test(email)) {
-    return { valid: true, email };
-  } else {
-    return { valid: false, error: 'INVALID_FORMAT' };
-  }
+  return emailRegex.test(email)
+    ? { valid: true, email }
+    : { valid: false, error: 'INVALID_FORMAT' };
 }
