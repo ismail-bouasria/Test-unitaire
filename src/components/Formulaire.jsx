@@ -116,38 +116,38 @@ export default function Formulaire() {
       <h2>Formulaire</h2>
       <form onSubmit={handleSubmit} noValidate>
         <div>
-          <label>Nom</label>
-          <input name="nom" value={values.nom} onChange={handleChange} onBlur={handleBlur} />
+          <label htmlFor="nom">Nom</label>
+          <input id="nom" name="nom" value={values.nom} onChange={handleChange} onBlur={handleBlur} />
           {errors.nom && <div style={{ color: 'red' }}>{errors.nom}</div>}
         </div>
 
         <div>
-          <label>Prénom</label>
-          <input name="prenom" value={values.prenom} onChange={handleChange} onBlur={handleBlur} />
+          <label htmlFor="prenom">Prénom</label>
+          <input id="prenom" name="prenom" value={values.prenom} onChange={handleChange} onBlur={handleBlur} />
           {errors.prenom && <div style={{ color: 'red' }}>{errors.prenom}</div>}
         </div>
 
         <div>
-          <label>Email</label>
-          <input name="email" value={values.email} onChange={handleChange} onBlur={handleBlur} />
+          <label htmlFor="email">Email</label>
+          <input id="email" name="email" value={values.email} onChange={handleChange} onBlur={handleBlur} />
           {errors.email && <div style={{ color: 'red' }}>{errors.email}</div>}
         </div>
 
         <div>
-          <label>Date de naissance</label>
-          <input name="dob" type="date" value={values.dob} onChange={handleChange} onBlur={handleBlur} />
+          <label htmlFor="dob">Date de naissance</label>
+          <input id="dob" name="dob" type="date" value={values.dob} onChange={handleChange} onBlur={handleBlur} />
           {errors.dob && <div style={{ color: 'red' }}>{errors.dob}</div>}
         </div>
 
         <div>
-          <label>Code Postal</label>
-          <input name="postal" value={values.postal} onChange={handleChange} onBlur={handleBlur} />
+          <label htmlFor="postal">Code Postal</label>
+          <input id="postal" name="postal" value={values.postal} onChange={handleChange} onBlur={handleBlur} />
           {errors.postal && <div style={{ color: 'red' }}>{errors.postal}</div>}
         </div>
 
         <div>
-          <label>Ville</label>
-          <input name="city" value={values.city} onChange={handleChange} onBlur={handleBlur} />
+          <label htmlFor="city">Ville</label>
+          <input id="city" name="city" value={values.city} onChange={handleChange} onBlur={handleBlur} />
           {errors.city && <div style={{ color: 'red' }}>{errors.city}</div>}
         </div>
 
