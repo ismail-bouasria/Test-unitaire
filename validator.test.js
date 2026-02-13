@@ -1,4 +1,4 @@
-import { isAdult, isValidPostalCode, isValidName, sanitizeInput, isValidEmail } from './validator.js';
+import { isAdult, isValidPostalCode, isValidName, sanitizeInput, isValidEmail } from './src/lib/validator.js';
 
 describe('Validator Module', () => {
   
