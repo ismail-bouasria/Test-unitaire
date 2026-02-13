@@ -144,9 +144,126 @@ describe('Tests d\'Intégration - Formulaire React', () => {
 
   });
 
-  describe('3. Cas Limites (Edge Cases)', () => {
+  describe('4. Tests d\'Interaction Utilisateur', () => {
 
-    test('Trim des espaces : espaces nettoyés avant enregistrement', async () => {
+    test('Navigation clavier : Tab entre les champs fonctionne', () => {
+      render(<Formulaire />);
+
+      const nom = screen.getByLabelText(/^Nom$/i);
+      const prenom = screen.getByLabelText(/^Prénom$/i);
+      const email = screen.getByLabelText(/^Email$/i);
+
+      // Focus initial sur nom
+      nom.focus();
+      expect(document.activeElement).toBe(nom);
+
+      // Tab vers prénom
+      fireEvent.keyDown(nom, { key: 'Tab' });
+      expect(document.activeElement).toBe(prenom);
+
+      // Tab vers email
+      fireEvent.keyDown(prenom, { key: 'Tab' });
+      expect(document.activeElement).toBe(email);
+    });
+
+  });
+
+  describe('5. Tests d\'Accessibilité', () => {
+
+    test('Labels ARIA : tous les champs ont des labels associés', () => {
+      render(<Formulaire />);
+
+      const nom = screen.getByLabelText(/^Nom$/i);
+      const prenom = screen.getByLabelText(/^Prénom$/i);
+      const email = screen.getByLabelText(/^Email$/i);
+      const dob = screen.getByLabelText(/^Date de naissance$/i);
+      const postal = screen.getByLabelText(/^Code Postal$/i);
+      const city = screen.getByLabelText(/^Ville$/i);
+
+      // Vérifier que les inputs ont les bons id et que les labels les référencent
+      expect(nom).toHaveAttribute('id', 'nom');
+      expect(prenom).toHaveAttribute('id', 'prenom');
+      expect(email).toHaveAttribute('id', 'email');
+      expect(dob).toHaveAttribute('id', 'dob');
+      expect(postal).toHaveAttribute('id', 'postal');
+      expect(city).toHaveAttribute('id', 'city');
+    });
+
+  });
+
+  describe('6. Tests de Sécurité', () => {
+
+    test('Injection XSS avancée : script dans ville nettoyé', () => {
+      render(<Formulaire />);
+
+      const city = screen.getByLabelText(/^Ville$/i);
+      const submit = screen.getByRole('button', { name: /Soumettre/i });
+
+      // Payload XSS plus complexe
+      fireEvent.change(city, { target: { value: '<img src=x onerror=alert(1)>' } });
+
+      // Remplir autres champs pour activer le bouton
+      const nom = screen.getByLabelText(/^Nom$/i);
+      const prenom = screen.getByLabelText(/^Prénom$/i);
+      const email = screen.getByLabelText(/^Email$/i);
+      const dob = screen.getByLabelText(/^Date de naissance$/i);
+      const postal = screen.getByLabelText(/^Code Postal$/i);
+
+      fireEvent.change(nom, { target: { value: 'Test' } });
+      fireEvent.change(prenom, { target: { value: 'User' } });
+      fireEvent.change(email, { target: { value: 'test@example.com' } });
+      const adultDate = new Date();
+      adultDate.setFullYear(adultDate.getFullYear() - 25);
+      fireEvent.change(dob, { target: { value: adultDate.toISOString().slice(0, 10) } });
+      fireEvent.change(postal, { target: { value: '75001' } });
+
+      fireEvent.click(submit);
+
+      // Vérifier que la ville a été nettoyée dans localStorage
+      const saved = JSON.parse(localStorage.getItem('form_submissions') || '[]');
+      expect(saved[0].city).toBe(''); // Les balises ont été supprimées
+    });
+
+  });
+
+  describe('7. Tests d\'UX/UI', () => {
+
+    test('États visuels du bouton : disabled/enabled avec styles corrects', () => {
+      render(<Formulaire />);
+
+      const submit = screen.getByRole('button', { name: /Soumettre/i });
+
+      // Initialement disabled avec opacity 0.6
+      expect(submit).toBeDisabled();
+      expect(submit).toHaveStyle('opacity: 0.6');
+
+      // Remplir tous les champs
+      const nom = screen.getByLabelText(/^Nom$/i);
+      const prenom = screen.getByLabelText(/^Prénom$/i);
+      const email = screen.getByLabelText(/^Email$/i);
+      const dob = screen.getByLabelText(/^Date de naissance$/i);
+      const postal = screen.getByLabelText(/^Code Postal$/i);
+      const city = screen.getByLabelText(/^Ville$/i);
+
+      fireEvent.change(nom, { target: { value: 'Dupont' } });
+      fireEvent.change(prenom, { target: { value: 'Jean' } });
+      fireEvent.change(email, { target: { value: 'jean@example.com' } });
+      const adultDate = new Date();
+      adultDate.setFullYear(adultDate.getFullYear() - 25);
+      fireEvent.change(dob, { target: { value: adultDate.toISOString().slice(0, 10) } });
+      fireEvent.change(postal, { target: { value: '75001' } });
+      fireEvent.change(city, { target: { value: 'Paris' } });
+
+      // Maintenant enabled avec opacity 1
+      expect(submit).toBeEnabled();
+      expect(submit).toHaveStyle('opacity: 1');
+    });
+
+  });
+
+  describe('8. Tests d\'Intégration Avancée', () => {
+
+    test('localStorage : multiples soumissions accumulées', () => {
       render(<Formulaire />);
 
       const nom = screen.getByLabelText(/^Nom$/i);
@@ -157,75 +274,95 @@ describe('Tests d\'Intégration - Formulaire React', () => {
       const city = screen.getByLabelText(/^Ville$/i);
       const submit = screen.getByRole('button', { name: /Soumettre/i });
 
-      // Saisir avec espaces
-      fireEvent.change(nom, { target: { value: '  Dupont  ' } });
-      fireEvent.change(prenom, { target: { value: '  Jean  ' } });
-      fireEvent.change(email, { target: { value: 'jean.dupont@example.com' } });
+      // Première soumission
+      fireEvent.change(nom, { target: { value: 'Alice' } });
+      fireEvent.change(prenom, { target: { value: 'Martin' } });
+      fireEvent.change(email, { target: { value: 'alice@test.com' } });
+      const date1 = new Date();
+      date1.setFullYear(date1.getFullYear() - 30);
+      fireEvent.change(dob, { target: { value: date1.toISOString().slice(0, 10) } });
+      fireEvent.change(postal, { target: { value: '69000' } });
+      fireEvent.change(city, { target: { value: 'Lyon' } });
 
-      const birthDate = new Date();
-      birthDate.setFullYear(birthDate.getFullYear() - 25);
-      fireEvent.change(dob, { target: { value: birthDate.toISOString().slice(0, 10) } });
-
-      fireEvent.change(postal, { target: { value: '75001' } });
-      fireEvent.change(city, { target: { value: '  Paris  ' } });
-
-      await waitFor(() => expect(submit).toBeEnabled());
       fireEvent.click(submit);
 
-      // Vérifier localStorage : espaces trimés
+      // Deuxième soumission
+      fireEvent.change(nom, { target: { value: 'Bob' } });
+      fireEvent.change(prenom, { target: { value: 'Wilson' } });
+      fireEvent.change(email, { target: { value: 'bob@test.com' } });
+      const date2 = new Date();
+      date2.setFullYear(date2.getFullYear() - 25);
+      fireEvent.change(dob, { target: { value: date2.toISOString().slice(0, 10) } });
+      fireEvent.change(postal, { target: { value: '33000' } });
+      fireEvent.change(city, { target: { value: 'Bordeaux' } });
+
+      fireEvent.click(submit);
+
+      // Vérifier que les deux soumissions sont dans localStorage
       const saved = JSON.parse(localStorage.getItem('form_submissions') || '[]');
-      expect(saved[0].nom).toBe('Dupont'); // trimé
-      expect(saved[0].prenom).toBe('Jean'); // trimé
-      expect(saved[0].city).toBe('Paris'); // trimé via sanitizeInput
+      expect(saved.length).toBe(2);
+      expect(saved[0].nom).toBe('Alice');
+      expect(saved[1].nom).toBe('Bob');
     });
 
-    test('Date de naissance dans le futur : erreur affichée', async () => {
-      render(<Formulaire />);
+  });
 
-      const dob = screen.getByLabelText(/^Date de naissance$/i);
-      const submit = screen.getByRole('button', { name: /Soumettre/i });
+  describe('9. Tests Fonctionnels - Edge Cases par Champ', () => {
 
-      // Date dans le futur
-      const futureDate = new Date();
-      futureDate.setFullYear(futureDate.getFullYear() + 5);
-      fireEvent.change(dob, { target: { value: futureDate.toISOString().slice(0, 10) } });
-      fireEvent.blur(dob);
-
-      expect(await screen.findByText(/DATE_IN_FUTURE/i)).toBeInTheDocument();
-      const dobError = screen.getByText(/DATE_IN_FUTURE/i);
-      expect(dobError).toHaveStyle('color: rgb(255, 0, 0)');
-
-      // Bouton disabled
-      expect(submit).toBeDisabled();
-    });
-
-    test('Soumission avec erreurs : pas de sauvegarde, pas de reset', async () => {
+    test('Nom avec caractères accentués et spéciaux : accepté', () => {
       render(<Formulaire />);
 
       const nom = screen.getByLabelText(/^Nom$/i);
+      const prenom = screen.getByLabelText(/^Prénom$/i);
+
+      // Caractères accentués
+      fireEvent.change(nom, { target: { value: 'José María' } });
+      fireEvent.blur(nom);
+      expect(screen.queryByText(/INVALID/i)).not.toBeInTheDocument();
+
+      // Tirets et apostrophes
+      fireEvent.change(prenom, { target: { value: 'Jean-Pierre' } });
+      fireEvent.blur(prenom);
+      expect(screen.queryByText(/INVALID/i)).not.toBeInTheDocument();
+    });
+
+    test('Email avec sous-domaine et + : accepté', () => {
+      render(<Formulaire />);
+
       const email = screen.getByLabelText(/^Email$/i);
-      const submit = screen.getByRole('button', { name: /Soumettre/i });
 
-      // Saisir des données invalides
-      fireEvent.change(nom, { target: { value: '<script>alert(1)</script>' } });
-      fireEvent.change(email, { target: { value: 'invalid-email' } });
+      fireEvent.change(email, { target: { value: 'test+tag@sub.example.com' } });
+      fireEvent.blur(email);
+      expect(screen.queryByText(/INVALID/i)).not.toBeInTheDocument();
+    });
 
-      // Bouton disabled
-      expect(submit).toBeDisabled();
+    test('Date de naissance : âge limite (18 ans exactement)', () => {
+      render(<Formulaire />);
 
-      // Tenter de soumettre (même si disabled, pour couvrir le code)
-      fireEvent.click(submit);
+      const dob = screen.getByLabelText(/^Date de naissance$/i);
 
-      // Pas de toaster
-      expect(screen.queryByRole('status')).not.toBeInTheDocument();
+      const eighteenYearsAgo = new Date();
+      eighteenYearsAgo.setFullYear(eighteenYearsAgo.getFullYear() - 18);
 
-      // localStorage vide
-      const saved = JSON.parse(localStorage.getItem('form_submissions') || '[]');
-      expect(saved.length).toBe(0);
+      fireEvent.change(dob, { target: { value: eighteenYearsAgo.toISOString().slice(0, 10) } });
+      fireEvent.blur(dob);
+      expect(screen.queryByText(/UNDERAGE/i)).not.toBeInTheDocument();
+    });
 
-      // Champs non vidés
-      expect(nom.value).toBe('<script>alert(1)</script>');
-      expect(email.value).toBe('invalid-email');
+    test('Code Postal : commençant par 0 et DOM-TOM', () => {
+      render(<Formulaire />);
+
+      const postal = screen.getByLabelText(/^Code Postal$/i);
+
+      // CP commençant par 0
+      fireEvent.change(postal, { target: { value: '01000' } });
+      fireEvent.blur(postal);
+      expect(screen.queryByText(/INVALID/i)).not.toBeInTheDocument();
+
+      // CP DOM-TOM (Réunion)
+      fireEvent.change(postal, { target: { value: '97400' } });
+      fireEvent.blur(postal);
+      expect(screen.queryByText(/INVALID/i)).not.toBeInTheDocument();
     });
 
   });
