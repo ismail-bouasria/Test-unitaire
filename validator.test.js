@@ -97,6 +97,20 @@ describe('Validator Module', () => {
       });
     });
 
+    // --- Cas non passants : âge < 18 ---
+    describe('Cas non passants - âge insuffisant', () => {
+      test('devrait retourner { valid: false, age, error: "AGE_UNDER_18" } pour un mineur', () => {
+        const birthDate = new Date();
+        birthDate.setFullYear(birthDate.getFullYear() - 16); // 16 ans
+        const result = isAdult(birthDate);
+        expect(result).toEqual({
+          valid: false,
+          age: 16,
+          error: 'AGE_UNDER_18'
+        });
+      });
+    });
+
     // --- Edge cases : valeurs invalides ---
     describe('Edge cases - Valeurs invalides', () => {
       test('devrait lancer une erreur si aucun argument fourni', () => {
