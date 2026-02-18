@@ -17,11 +17,9 @@ test('E2E: formulaire soumis et sauvegardé', async ({ page }) => {
   await page.fill('#postal', '75001');
   await page.fill('#city', 'Paris');
 
-  // Soumettre
-  await Promise.all([
-    page.waitForResponse(resp => resp.status() === 200 || resp.status() === 0).catch(() => {}),
-    page.click('button[type="submit"]')
-  ]);
+  // Soumettre : attendre que le bouton soit activé puis cliquer
+  await page.waitForSelector('button[type="submit"]:not([disabled])', { timeout: 5000 });
+  await page.click('button[type="submit"]');
 
   // Vérifier le toaster
   const toaster = await page.waitForSelector('[role="status"]', { timeout: 3000 });
