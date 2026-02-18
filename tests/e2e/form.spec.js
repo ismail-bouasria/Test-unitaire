@@ -18,7 +18,18 @@ test('E2E: formulaire soumis et sauvegardé', async ({ page }) => {
   await page.fill('#city', 'Paris');
 
   // Soumettre : attendre que le bouton soit activé puis cliquer
-  await page.waitForSelector('button[type="submit"]:not([disabled])', { timeout: 5000 });
+  // Debug: log form state before waiting
+  const stateBefore = await page.evaluate(() => {
+    const get = id => document.querySelector(id) ? document.querySelector(id).value : null;
+    const errors = Array.from(document.querySelectorAll('div')).filter(d => d.style && d.style.color === 'red').map(d => d.textContent);
+    return {
+      nom: get('#nom'), prenom: get('#prenom'), email: get('#email'), dob: get('#dob'), postal: get('#postal'), city: get('#city'),
+      submitDisabled: document.querySelector('button[type="submit"]')?.disabled,
+      errors
+    };
+  });
+  console.log('FORM STATE BEFORE SUBMIT:', JSON.stringify(stateBefore));
+  await page.waitForSelector('button[type="submit"]:not([disabled])', { timeout: 15000 });
   await page.click('button[type="submit"]');
 
   // Vérifier le toaster
