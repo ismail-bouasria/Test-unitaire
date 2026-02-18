@@ -5,7 +5,7 @@ test('E2E: formulaire soumis et sauvegardé', async ({ page }) => {
   await page.goto('/public/index.html');
 
   // Remplir le formulaire
-  await page.fill('#nom', 'E2E');
+  await page.fill('#nom', 'Etest');
   await page.fill('#prenom', 'Test');
   await page.fill('#email', 'e2e.test@example.com');
 
