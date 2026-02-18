@@ -32,7 +32,7 @@ jobs:
       - name: Build
         run: npm run build
       - name: Serve dist
-        run: npx http-server ./ -p 3000 & npx wait-on http://localhost:3000
+        run: npx http-server ./ -p 3001 & npx wait-on http://localhost:3001
       - name: Install Playwright browsers
         run: npx playwright install --with-deps
       - name: Run E2E tests

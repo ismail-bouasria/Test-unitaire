@@ -8,7 +8,7 @@ module.exports = defineConfig({
     headless: true,
     viewport: { width: 1280, height: 720 },
     actionTimeout: 5000,
-    baseURL: 'http://localhost:3000'
+    baseURL: 'http://localhost:3001'
   },
   projects: [
     { name: 'chromium', use: { browserName: 'chromium' } },
