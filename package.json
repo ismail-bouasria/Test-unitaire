@@ -5,6 +5,8 @@
   "main": "module.js",
   "scripts": {
     "test": "jest --coverage",
+    "e2e": "playwright test",
+    "e2e:open": "playwright test --headed",
     "jsdoc": "jsdoc -c ./jsdoc.config.json -r -d ./docs",
     "start": "webpack serve --mode development --open",
     "build": "webpack --mode production"
