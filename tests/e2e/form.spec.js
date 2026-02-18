@@ -1,7 +1,8 @@
 const { test, expect } = require('@playwright/test');
 
 test('E2E: formulaire soumis et sauvegardé', async ({ page }) => {
-  await page.goto('/');
+  // Open the built index page from the public folder (served at project root)
+  await page.goto('/public/index.html');
 
   // Remplir le formulaire
   await page.fill('#nom', 'E2E');
