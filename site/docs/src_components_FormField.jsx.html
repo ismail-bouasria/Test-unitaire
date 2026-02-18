@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>JSDoc: Home</title>
+    <title>JSDoc: Source: src/components/FormField.jsx</title>
 
     <script src="scripts/prettify/prettify.js"> </script>
     <script src="scripts/prettify/lang-css.js"> </script>
@@ -17,32 +17,39 @@
 
 <div id="main">
 
-    <h1 class="page-title">Home</h1>
+    <h1 class="page-title">Source: src/components/FormField.jsx</h1>
 
     
 
 
 
     
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>import React from 'react';
 
+/**
+ * Composant réutilisable pour un champ de formulaire
+ * Respecte DRY : évite la répétition du markup pour chaque champ
+ */
+const FormField = ({ label, name, type = 'text', value, error, onChange, onBlur }) => (
+  &lt;div>
+    &lt;label htmlFor={name}>{label}&lt;/label>
+    &lt;input
+      id={name}
+      name={name}
+      type={type}
+      value={value}
+      onChange={onChange}
+      onBlur={onBlur}
+    />
+    {error &amp;&amp; &lt;div style={{ color: 'red' }}>{error}&lt;/div>}
+  &lt;/div>
+);
 
-    <h3> </h3>
-
-
-
-
-
-
-
-
-
-
-    
-
-
-
-
-
+export default FormField;</code></pre>
+        </article>
+    </section>
 
 
 

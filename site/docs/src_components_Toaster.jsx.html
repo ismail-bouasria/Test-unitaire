@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>JSDoc: Home</title>
+    <title>JSDoc: Source: src/components/Toaster.jsx</title>
 
     <script src="scripts/prettify/prettify.js"> </script>
     <script src="scripts/prettify/lang-css.js"> </script>
@@ -17,32 +17,53 @@
 
 <div id="main">
 
-    <h1 class="page-title">Home</h1>
+    <h1 class="page-title">Source: src/components/Toaster.jsx</h1>
 
     
 
 
 
     
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>import React, { useEffect } from 'react';
 
+/**
+ * Composant Toaster pour afficher les notifications
+ * Respecte SRP : affichage des notifications uniquement
+ */
+const Toaster = ({ message, onClose }) => {
+  useEffect(() => {
+    if (message) {
+      const timer = setTimeout(onClose, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [message, onClose]);
 
-    <h3> </h3>
+  if (!message) return null;
 
+  return (
+    &lt;div
+      role="status"
+      style={{
+        position: 'fixed',
+        right: 20,
+        top: 20,
+        background: '#333',
+        color: '#fff',
+        padding: '8px 12px',
+        borderRadius: 4,
+        zIndex: 1000
+      }}
+    >
+      {message}
+    &lt;/div>
+  );
+};
 
-
-
-
-
-
-
-
-
-    
-
-
-
-
-
+export default Toaster;</code></pre>
+        </article>
+    </section>
 
 
 
