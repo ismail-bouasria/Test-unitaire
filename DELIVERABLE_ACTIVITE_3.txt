@@ -1,0 +1,3 @@
+Repository: https://github.com/ismail-bouasria/Test-unitaire
+Tag: activite_3
+Notes: CI workflow added (.github/workflows/ci.yml) running unit tests and Playwright E2E tests. Playwright config and E2E tests under tests/e2e/.
