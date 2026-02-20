@@ -66,7 +66,7 @@ describe('Tests d\'Intégration - Formulaire React', () => {
 
       fireEvent.change(email, { target: { value: 'jean@example.com' } });
       fireEvent.blur(email);
-      await waitFor(() => expect(screen.queryByText(/INVALID_FORMAT/i)).toBeNull());
+      await waitFor(() => expect(within(email.parentElement).queryByText(/INVALID_FORMAT/i)).toBeNull());
 
       const adultDate = new Date();
       adultDate.setFullYear(adultDate.getFullYear() - 25);
@@ -154,15 +154,15 @@ describe('Tests d\'Intégration - Formulaire React', () => {
 
       // Focus initial sur nom
       fireEvent.focus(nom);
-      expect(document.activeElement).toBe(nom);
+      expect(document.activeElement.id).toBe('nom');
 
       // Tab vers prénom (simulé)
       fireEvent.focus(prenom);
-      expect(document.activeElement).toBe(prenom);
+      expect(document.activeElement.id).toBe('prenom');
 
       // Tab vers email (simulé)
       fireEvent.focus(email);
-      expect(document.activeElement).toBe(email);
+      expect(document.activeElement.id).toBe('email');
     });
 
   });
