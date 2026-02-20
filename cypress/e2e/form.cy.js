@@ -1,6 +1,6 @@
 describe('E2E: formulaire soumis et sauvegardé', () => {
   it('remplit le formulaire, soumet et vérifie localStorage', () => {
-    cy.visit('/index.html')
+    cy.visit('/public/index.html')
 
     cy.get('#nom').type('Etest')
     cy.get('#prenom').type('Test')

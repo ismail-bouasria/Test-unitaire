@@ -10,7 +10,7 @@
     "jsdoc": "jsdoc -c ./jsdoc.config.json -r -d ./docs",
     "start": "webpack serve --mode development --open",
     "build": "webpack --mode production",
-    "serve:public": "npx http-server ./public -p 3001"
+    "serve:public": "npx http-server . -p 3001"
   },
   "keywords": [],
   "author": "",
