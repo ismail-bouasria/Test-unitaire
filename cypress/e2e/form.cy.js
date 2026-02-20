@@ -1,6 +1,7 @@
 describe('E2E: formulaire soumis et sauvegardé', () => {
   it('remplit le formulaire, soumet et vérifie localStorage', () => {
-    cy.visit('/public/index.html')
+    // Utilise la baseUrl de cypress.config.js pour charger la racine React
+    cy.visit('/')
 
     cy.get('#nom').type('Etest')
     cy.get('#prenom').type('Test')
@@ -15,8 +16,8 @@ describe('E2E: formulaire soumis et sauvegardé', () => {
     cy.get('#city').type('Paris')
 
     // attendre que le bouton soit activé puis cliquer
-        // Intercept API POST to JSONPlaceholder and stub success
-        cy.intercept('POST', 'https://jsonplaceholder.typicode.com/posts', {
+        // Intercept API POST to /posts (catch both absolute and relative URLs) and stub success
+        cy.intercept('POST', '**/posts', {
           statusCode: 201,
           body: { id: 101 }
         }).as('postSignup');
@@ -27,8 +28,9 @@ describe('E2E: formulaire soumis et sauvegardé', () => {
     cy.get('[role="status"]', { timeout: 3000 }).should('contain', 'Formulaire soumis avec succès')
 
         // Wait for API call and assert payload
-        const req = await cy.wait('@postSignup');
-        const body = req.response.body || {};
-        expect(body.email).to.equal('e2e.test@example.com');
+        cy.wait('@postSignup', { timeout: 10000 }).then((req) => {
+          const body = req.request?.body || req.response?.body || {};
+          expect(body.email).to.equal('e2e.test@example.com');
+        });
   })
 })

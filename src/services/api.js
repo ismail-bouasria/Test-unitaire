@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 // Simple API wrapper. Uses JSONPlaceholder for demo purposes.
-const API_BASE = process.env.REACT_APP_API_URL || 'https://jsonplaceholder.typicode.com';
+const API_BASE = 'https://jsonplaceholder.typicode.com';
 
 const client = axios.create({ baseURL: API_BASE, timeout: 5000 });
 
