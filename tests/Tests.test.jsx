@@ -49,11 +49,11 @@ describe('Tests d\'Intégration - Formulaire React', () => {
       // Saisies invalides initiales
       fireEvent.change(email, { target: { value: 'invalid' } });
       fireEvent.blur(email);
-      expect(await screen.findByText(/INVALID_FORMAT/i)).toBeInTheDocument();
+      await within(email.parentElement).findByText(/INVALID_FORMAT/i);
 
       fireEvent.change(postal, { target: { value: '12' } });
       fireEvent.blur(postal);
-      expect(await screen.findByText(/INVALID_FORMAT/i)).toBeInTheDocument();
+      await within(postal.parentElement).findByText(/INVALID_FORMAT/i);
 
       expect(submit).toBeDisabled();
 
@@ -153,16 +153,15 @@ describe('Tests d\'Intégration - Formulaire React', () => {
       const email = screen.getByLabelText(/^Email$/i);
 
       // Focus initial sur nom
-      nom.focus();
+      fireEvent.focus(nom);
       expect(document.activeElement).toBe(nom);
 
-      // Tab vers prénom
-      // Simuler la navigation par tabulation en forçant le focus (jsdom ne gère pas nativement Tab)
-      prenom.focus();
+      // Tab vers prénom (simulé)
+      fireEvent.focus(prenom);
       expect(document.activeElement).toBe(prenom);
 
-      // Tab vers email
-      email.focus();
+      // Tab vers email (simulé)
+      fireEvent.focus(email);
       expect(document.activeElement).toBe(email);
     });
 
