@@ -41,6 +41,7 @@
     "node": ">=14"
   },
   "jest": {
-    "testEnvironment": "jsdom"
+    "testEnvironment": "jsdom",
+    "testPathIgnorePatterns": ["<rootDir>/tests/e2e/", "<rootDir>/cypress/"]
   }
 }
