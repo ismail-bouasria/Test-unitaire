@@ -1,5 +1,6 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
+import { act } from 'react-dom/test-utils';
 import '@testing-library/jest-dom';
 import Formulaire from '../src/components/Formulaire.jsx';
 
@@ -153,15 +154,15 @@ describe('Tests d\'Intégration - Formulaire React', () => {
       const email = screen.getByLabelText(/^Email$/i);
 
       // Focus initial sur nom
-      fireEvent.focus(nom);
+      act(() => { nom.focus(); });
       expect(document.activeElement.id).toBe('nom');
 
       // Tab vers prénom (simulé)
-      fireEvent.focus(prenom);
+      act(() => { prenom.focus(); });
       expect(document.activeElement.id).toBe('prenom');
 
       // Tab vers email (simulé)
-      fireEvent.focus(email);
+      act(() => { email.focus(); });
       expect(document.activeElement.id).toBe('email');
     });
 
