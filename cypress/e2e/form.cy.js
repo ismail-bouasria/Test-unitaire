@@ -15,16 +15,20 @@ describe('E2E: formulaire soumis et sauvegardé', () => {
     cy.get('#city').type('Paris')
 
     // attendre que le bouton soit activé puis cliquer
-    cy.get('button[type="submit"]', { timeout: 15000 }).should('not.be.disabled').click()
+        // Intercept API POST to JSONPlaceholder and stub success
+        cy.intercept('POST', 'https://jsonplaceholder.typicode.com/posts', {
+          statusCode: 201,
+          body: { id: 101 }
+        }).as('postSignup');
+
+        cy.get('button[type="submit"]', { timeout: 15000 }).should('not.be.disabled').click()
 
     // Vérifier le toaster
     cy.get('[role="status"]', { timeout: 3000 }).should('contain', 'Formulaire soumis avec succès')
 
-    // Vérifier localStorage
-    cy.window().then((win) => {
-      const saved = JSON.parse(win.localStorage.getItem('form_submissions') || '[]')
-      expect(saved.length).to.be.greaterThan(0)
-      expect(saved[0].email).to.equal('e2e.test@example.com')
-    })
+        // Wait for API call and assert payload
+        const req = await cy.wait('@postSignup');
+        const body = req.response.body || {};
+        expect(body.email).to.equal('e2e.test@example.com');
   })
 })
