@@ -1,3 +1,17 @@
+node_modules/
+dist/
+coverage/
+/.vscode/
+.DS_Store
+cypress/videos/
+cypress/screenshots/
+npm-debug.log*
+/tmp/
+/.idea/
+npx
+public/dist/
+/.parcel-cache/
+/.cache/
 # Dependencies
 node_modules/
 
