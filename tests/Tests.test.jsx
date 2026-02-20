@@ -2,10 +2,15 @@ import React from 'react';
 import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
 import { act } from 'react-dom/test-utils';
 import '@testing-library/jest-dom';
+import axios from 'axios';
 import Formulaire from '../src/components/Formulaire.jsx';
 
+jest.mock('axios');
+
 beforeEach(() => {
-  localStorage.clear();
+  // reset axios mocks
+  axios.post.mockResolvedValue({ status: 201, data: {} });
+  axios.get.mockResolvedValue({ status: 200, data: [] });
 });
 
 describe('Tests d\'Intégration - Formulaire React', () => {
@@ -115,17 +120,18 @@ describe('Tests d\'Intégration - Formulaire React', () => {
       // Attendre que le bouton soit enabled
       await waitFor(() => expect(submit).toBeEnabled());
 
-      // Soumission
+      // Soumission: we mock axios.post in beforeEach
       fireEvent.click(submit);
 
       // Feedback succès (Toaster)
       expect(await screen.findByRole('status')).toBeInTheDocument();
       expect(screen.getByRole('status')).toHaveTextContent('Formulaire soumis avec succès');
 
-      // LocalStorage
-      const saved = JSON.parse(localStorage.getItem('form_submissions') || '[]');
-      expect(saved.length).toBe(1);
-      expect(saved[0]).toMatchObject({
+      // Vérifier que l'API a été appelée avec les données attendues
+      const axios = require('axios');
+      expect(axios.post).toHaveBeenCalledTimes(1);
+      const callPayload = axios.post.mock.calls[0][1];
+      expect(callPayload).toMatchObject({
         nom: 'Martin',
         prenom: 'Alice',
         email: 'alice.martin@test.com',
@@ -219,9 +225,11 @@ describe('Tests d\'Intégration - Formulaire React', () => {
 
       fireEvent.click(submit);
 
-      // Vérifier que la ville a été nettoyée dans localStorage
-      const saved = JSON.parse(localStorage.getItem('form_submissions') || '[]');
-      expect(saved[0].city).toBe(''); // Les balises ont été supprimées
+      // Vérifier que l'API a reçu la ville nettoyée
+      const axios = require('axios');
+      expect(axios.post).toHaveBeenCalledTimes(1);
+      const payload = axios.post.mock.calls[0][1];
+      expect(payload.city).toBe(''); // Les balises ont été supprimées
     });
 
   });
@@ -298,11 +306,11 @@ describe('Tests d\'Intégration - Formulaire React', () => {
 
       fireEvent.click(submit);
 
-      // Vérifier que les deux soumissions sont dans localStorage
-      const saved = JSON.parse(localStorage.getItem('form_submissions') || '[]');
-      expect(saved.length).toBe(2);
-      expect(saved[0].nom).toBe('Alice');
-      expect(saved[1].nom).toBe('Bob');
+      // Vérifier que l'API a été appelée deux fois avec les bonnes données
+      const axios = require('axios');
+      expect(axios.post).toHaveBeenCalledTimes(2);
+      expect(axios.post.mock.calls[0][1].nom).toBe('Alice');
+      expect(axios.post.mock.calls[1][1].nom).toBe('Bob');
     });
 
   });

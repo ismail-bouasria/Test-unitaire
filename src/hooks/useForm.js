@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
 import { isValidName, isValidEmail, isAdult, isValidPostalCode, sanitizeInput } from '../lib/validator.js';
+import { postSignup } from '../services/api.js';
 
 /**
  * Hook personnalisé pour gérer la logique du formulaire
@@ -62,7 +63,6 @@ export const useForm = (initialValues, onSubmitSuccess) => {
 
   const handleSubmit = useCallback((e) => {
     e.preventDefault();
-
     // Validation finale
     const newErrors = {};
     Object.keys(values).forEach(key => {
@@ -72,22 +72,32 @@ export const useForm = (initialValues, onSubmitSuccess) => {
 
     if (Object.values(newErrors).some(error => error)) return;
 
-    // Sauvegarde
-    const submissions = JSON.parse(localStorage.getItem('form_submissions') || '[]');
-    const submission = {
-      ...values,
-      city: sanitizeInput(values.city).sanitized,
-      submittedAt: new Date().toISOString()
-    };
-    localStorage.setItem('form_submissions', JSON.stringify([...submissions, submission]));
+    // Call API instead of localStorage
+    (async () => {
+      try {
+        const payload = {
+          ...values,
+          city: sanitizeInput(values.city).sanitized,
+          submittedAt: new Date().toISOString()
+        };
+        const res = await postSignup(payload);
+        if (res && (res.status === 201 || res.status === 200)) {
+          onSubmitSuccess();
+        } else {
+          // Treat unexpected status as error
+          onSubmitSuccess && onSubmitSuccess('Erreur serveur');
+        }
 
-    // Callback de succès
-    onSubmitSuccess();
-
-    // Reset
-    setValues(initialValues);
-    setTouched({});
-    setErrors({});
+        // Reset local state regardless
+        setValues(initialValues);
+        setTouched({});
+        setErrors({});
+      } catch (err) {
+        // Bubble up a meaningful error by calling onSubmitSuccess with message
+        const msg = err?.response?.data?.message || err?.message || 'SERVER_ERROR';
+        onSubmitSuccess && onSubmitSuccess(msg);
+      }
+    })();
   }, [values, validateField, initialValues, onSubmitSuccess]);
 
   return {
