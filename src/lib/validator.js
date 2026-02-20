@@ -81,7 +81,8 @@ export function isValidName(name) {
     return { valid: false, error: 'XSS_DETECTED' };
   }
 
-  const validNameRegex = /^[a-zA-ZàâäéèêëïîôùûüçœæÀÂÄÉÈÊËÏÎÔÙÛÜÇŒÆäöüßÄÖÜ\s\-']+$/;
+  // Accept all Unicode letters + common punctuation (spaces, hyphens, apostrophes)
+  const validNameRegex = /^[\p{L}\s\-']+$/u;
   return validNameRegex.test(name)
     ? { valid: true, name }
     : { valid: false, error: 'INVALID_CHARACTERS' };

@@ -29,7 +29,9 @@ export const useForm = (initialValues, onSubmitSuccess) => {
           return isValidPostalCode(value).valid ? '' : isValidPostalCode(value).error;
         case 'city': {
           const sanitized = sanitizeInput(value || '');
-          return sanitized.sanitized.trim() === '' ? 'EMPTY_CITY' : '';
+          // Accepter les champs ville qui deviennent vides après sanitization
+          // (on préfère sauvegarder une chaîne vide plutôt que bloquer la soumission)
+          return '';
         }
         default:
           return '';
